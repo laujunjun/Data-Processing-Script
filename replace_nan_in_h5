@@ -1,0 +1,36 @@
+'''
+这个 Python 脚本用于 检查 HDF5 (.h5) 文件中的 features 数据集是否存在 NaN 值，
+并将前 776 个 NaN 替换为数据的均值。它适用于处理病理图像特征文件（如 PathoSig 项目），
+确保模型输入数据的完整性。
+'''
+import h5py
+import numpy as np
+
+def replace_nan_with_mean(file_path):
+    with h5py.File(file_path, 'r+') as h5_file:
+        if 'features' in h5_file:
+            features = h5_file['features'][:]
+            
+            # 检查并输出 NaN 值的数量
+            nan_count = np.sum(np.isnan(features))
+            print(f"Total NaN values: {nan_count}")
+
+            # 找出前 776 个 NaN 值并替换
+            if nan_count >= nan_count:
+                nan_indices = np.where(np.isnan(features))[0][:776]
+                # 计算其他非 NaN 数据的均值
+                mean_value = np.nanmean(features)
+                print(f"Mean value to replace NaNs: {mean_value}")
+
+                # 用均值替换前 776 个 NaN 值
+                features[nan_indices] = mean_value
+
+                # 将替换后的数据写回 HDF5 文件
+                h5_file['features'][...] = features
+                print(f"Replaced first 776 NaN values in {file_path}")
+            else:
+                print(f"Less than 776 NaN values found in {file_path}")
+
+if __name__ == "__main__":
+    file_path = '/9_data/ljj/PathoSig/nan_debug/Z1014682-3_M4.h5'  # 替换为你的文件路径
+    replace_nan_with_mean(file_path)
